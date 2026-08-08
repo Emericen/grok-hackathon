@@ -71,12 +71,11 @@ worlds/<id>/
 
 ## Status
 
-The three scripts are currently **spec-only** — each file's docstring is the full spec, including implementation notes from a working prototype (multimodal reads, both providers, and the grade→table path were verified end-to-end, then stashed pending this spec).
+All three scripts are implemented (stdlib + PIL only) and validated end to end on a small case: real case → trace → pipeline (substitution map → agent-fabricated twin → template-rendered scan images → verifiers from the correction → leak scan) → twin world → eval run → grade table. The packaging leak scan has already caught two real leaks in testing — one surviving date string, one real entity inside generated verifier criteria — and refused to ship both times.
 
 - [x] Demo world (21 files, 8 verifiers)
-- [x] Spec: README + script docstrings
-- [ ] Runner
-- [ ] Grader + reproduction table
-- [ ] Pipeline (trace → twin)
+- [x] Runner (multimodal reads: images, scanned PDFs, docx, xlsx)
+- [x] Grader + reproduction table
+- [x] Pipeline (trace → twin, fabricator is the same runner)
 - [ ] Reproduction report over N runs on Grok
 - [ ] Certificate exhibit (substitution scan, re-identification attempt, consent record)
