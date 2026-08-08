@@ -4,9 +4,8 @@
 
 Built for the SpaceXAI Grokathon, Aug 8 2026.
 
-> **Every document referenced here is synthetic.** The `b2-wang-guirong` world contains
-> generated mockups — no real person's records, no real case, no scanned originals.
-> That is the entire point of the pipeline.
+> **Every document referenced here is synthetic** — generated mockups, no real person's
+> records, no real case, no scanned originals. That is the entire point of the pipeline.
 
 Self-contained by design: read only this file and you have the thesis, the architecture, the mechanics, and what's left to build.
 
@@ -252,22 +251,22 @@ Because a world tarball + verifiers array is exactly what their open-source runn
 
 ## 8. The demo world
 
-`b2-wang-guirong` — a B-2 visitor visa preparation case. 21 client files as they actually arrive: Chinese property deeds (房产证, 房屋买卖合同), household registration (户口本), two passports, marriage certificate (结婚证), business license (营业执照), WeChat merchant records, bank statements, pension and lease documents, a 2023 visa refusal slip, an invitation letter draft, and camera-filename photos (`IMG_2043.jpg`). Two languages. A document pile, not a dataset.
+A US visitor-visa (B-2) application, prepared by a small immigration practice. 21 client files as they actually arrive: Chinese property deeds (房产证, 房屋买卖合同), household registration (户口本), two passports, marriage certificate (结婚证), business license (营业执照), WeChat merchant records, bank statements, pension and lease documents, a 2023 visa refusal slip, an invitation letter draft, and camera-filename photos (`IMG_2043.jpg`). Two languages. A document pile, not a dataset.
 
 Task: produce six deliverables in `/filesystem/output/`.
 
 Eight verifiers, each a trap a competent practitioner catches and a model tends to miss:
 
-| Verifier | Trap |
+| Verifier | The trap |
 |---|---|
-| `ver_b2_001` | Name spellings conflict across documents — establish one canonical applicant name |
-| `ver_b2_002` | Find *and honestly disclose* the Oct 2023 §214(b) refusal |
-| `ver_b2_003` | Connect the 380,000 CNY deposit (2026-03-18) to the apartment sale contract |
-| `ver_b2_004` | Catch the date conflict: invitation letter (May 10–31, 2027) vs ticketed itinerary |
-| `ver_b2_005` | Ties-to-China summary drawing on ≥3 distinct evidence sources |
-| `ver_b2_006` | Travel history lives in **both** passports — Japan 2019 and South Korea 2016 |
-| `ver_b2_007` | Translation/consistency |
-| `ver_b2_008` | Negative — invent nothing absent from the file set |
+| **canonical name** | Name spellings conflict across documents — establish one canonical applicant name |
+| **disclose refusal** | Find *and honestly disclose* the Oct 2023 §214(b) refusal |
+| **explain deposit** | Connect the 380,000 CNY deposit (2026-03-18) to the apartment sale contract |
+| **date conflict** | Catch the date conflict: invitation letter (May 10–31, 2027) vs ticketed itinerary |
+| **ties evidence** | Ties-to-China summary drawing on ≥3 distinct evidence sources |
+| **both passports** | Travel history lives in **both** passports — Japan 2019 and South Korea 2016 |
+| **translation** | Translation/consistency |
+| **no fabrication** | Negative — invent nothing absent from the file set |
 
 These are the mistakes that get a visa denied.
 
@@ -293,7 +292,7 @@ Deliberately minimal — the world and the verifiers are what's on trial, not th
 
 Status:
 
-- [x] World built (`b2-wang-guirong`, 21 files, 8 verifiers)
+- [x] Demo world built (21 files, 8 verifiers)
 - [ ] Runner
 - [ ] Grader
 - [ ] Reproduction report over N runs
