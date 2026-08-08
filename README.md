@@ -8,7 +8,7 @@ Built for the SpaceXAI Grokathon, Aug 8 2026.
 > generated mockups — no real person's records, no real case, no scanned originals.
 > That is the entire point of the pipeline.
 
-This README is written to be self-contained: an engineer (or their agent) should be able to read only this file and understand the thesis, the architecture, the mechanics, and what's left to build.
+Self-contained by design: read only this file and you have the thesis, the architecture, the mechanics, and what's left to build.
 
 ---
 
@@ -16,31 +16,35 @@ This README is written to be self-contained: an engineer (or their agent) should
 
 Sandboxes / worlds to train on are worth a lot.
 
-- Labs spend roughly **$6–8.5B/year** on human training data — about **$1B/year each** for the majors. Triangulated from vendor run rates (Surge ~$1.2–1.4B, Mercor ~$2B gross, Handshake ~$1.1B gross, Scale ~$1–1.5B); Menlo Ventures catalogs the sector at ~$8.5B across 50+ companies with >75% going to the top four.
-- **Anthropic discussed spending >$1B on RL environments alone** in a single year (The Information, Sep 2025).
-- **Google is reportedly in talks to pay $1.5B+ for Mechanize**, a ~12-person environments team (Aug 2026).
-- Unit economics: ~$20k for a website-replica environment, ~$300k for a complex app clone, $200–2,000 per expert-authored task, 4–5x premium for exclusivity, seven figures per quarter for frontier-lab contracts.
+- Labs spend roughly **$6–8.5B/year** on human training data — about **$1B/year each** for the majors. Triangulated from vendor run rates: Surge ~$1.2–1.4B ([Sacra](https://sacra.com/c/surge-ai/), [Inc.](https://www.inc.com/brian-contreras/surge-ai-startup-bootstrapped-1-billion-revenue-venture-capital-vc/91205888)), Mercor ~$2B gross ([Dealroom](https://app.dealroom.co/news/note/mercor-doubles-to-2b-gross-revenue-run-rate-as-ai-labs-buy-expert-data)), Handshake ~$1.1B gross ([Dealroom](https://app.dealroom.co/news/note/handshake-s-arr-crosses-1b-as-ai-training-revenue-surges)), Scale ~$1–1.5B ([CNBC](https://www.cnbc.com/2025/11/04/scale-ais-life-after-meta-has-been-rocky-cfo-insists-not-a-zombie.html)). Menlo Ventures catalogs the sector at **~$8.5B across 50+ companies**, >75% to the top four ([via Pebblous](https://blog.pebblous.ai/blog/labeling-to-rl-environments/en/)).
+- **Anthropic discussed spending >$1B on RL environments alone** in a single year — The Information, Sep 2025, relayed by [TechCrunch](https://techcrunch.com/2025/09/21/silicon-valley-bets-big-on-environments-to-train-ai-agents/) and [Epoch AI](https://epoch.ai/gradient-updates/state-of-rl-envs). *Discussed, never confirmed as executed.*
+- **Google reportedly in talks to pay $1.5B+ for Mechanize**, a ~12-person environments team ([Seeking Alpha](https://seekingalpha.com/news/4626111-google-considers-15b-deal-with-mechanize-to-bolster-ai-coding-capabilities-report), Aug 2026, orig. The Information). *In talks — terms could change.*
+- Unit economics ([Epoch AI](https://epoch.ai/gradient-updates/state-of-rl-envs), sourced to anonymous founders): ~$20k for a website-replica environment, ~$300k for a complex app clone, $200–2,000 per expert-authored task, **4–5x premium for exclusivity**, seven figures per quarter for frontier-lab contracts.
 
 The bottleneck is not demand. It is **supply you are allowed to use.**
 
-Real professional work is where the valuable failures live — messy client folders, two languages, scanned documents, jurisdiction-specific rules, no API. But nobody hands over client files. So the industry routes around it: Mercor pays ex-employees for their old work product, SimpleClosure sold dead companies' Slack/Jira/email archives at $10k–100k per company, and xAI's Grok Build CLI was caught wire-uploading entire private repos — **5.1 GB out the door on a 12 GB repo for a task that needed 192 KB** — into a bucket named `grok-code-session-traces`, with an "Improve the model" opt-out that never stopped the uploads. ([r/LocalLLaMA thread](https://www.reddit.com/r/LocalLLaMA/comments/1uvlwz0/this_is_why_we_need_local_models_and_opensource/), 3.5k upvotes.)
+Real professional work is where the valuable failures live — messy client folders, two languages, scanned documents, no API. But nobody hands over client files, so the industry routes around it:
 
-**Privacy is not a caveat on this idea. It is the moat.** Whoever solves consented collection owns the only clean supply of real-world environments.
+- Mercor recruits **ex-employees of firms that won't sell**, and sells an "Enterprise Workflow Data" product ([TechCrunch](https://techcrunch.com/2025/10/29/how-ai-labs-use-mercor-to-get-the-data-companies-wont-share), Oct 2025; [mercor.com/data](https://www.mercor.com/data/)).
+- SimpleClosure sold the full Slack/Jira/email archives of ~100 defunct companies to labs at **$10k–100k per company** ([Forbes](https://www.forbes.com/sites/annatong/2026/04/16/ais-new-training-data-your-old-work-slacks-and-emails/), Apr 2026).
+- xAI's Grok Build CLI was caught wire-uploading entire private repos — **5.1 GB out the door on a 12 GB repo for a task that needed 192 KB** — into a bucket named `grok-code-session-traces`, with an "Improve the model" opt-out that never stopped it ([The Hacker News](https://thehackernews.com/2026/07/grok-build-uploads-entire-git.html), [The Register](https://www.theregister.com/ai-and-ml/2026/07/14/musk-promises-purge-after-grok-build-caught-sending-entire-repos-to-the-cloud/5271123), [r/LocalLLaMA](https://www.reddit.com/r/LocalLLaMA/comments/1uvlwz0/this_is_why_we_need_local_models_and_opensource/) — 3.5k upvotes).
+
+**Privacy is not a caveat on this idea. It is the moat** — whoever solves consented collection owns the only clean supply of real-world environments.
 
 So: a pipeline that reconstructs a real OS sandbox preserving the *case* — its structure, its traps, its failure mode — while changing every fact inside it.
 
 ### Why a lab wants it
 
-- **Reward where they currently have none.** Labs have verifiable reward in code (tests pass) and math (answers check). They have essentially none for judgment-heavy professional work. Verifiers convert an expert's judgment into machine-checkable reward.
-- **Difficulty at the learnable frontier.** RL only works on tasks a model fails *sometimes*. A measured reproduction rate ("fails 7/10") is a pre-qualified difficulty label. Mechanize's own argument: at ~$2,400 of RL compute per task, cheap tasks waste money.
-- **A frontier that refreshes.** Worlds saturate — once a model passes reliably, that world is spent, and clean synthetic curricula saturate fastest. This source is renewable by construction: experts keep working, models keep failing in new ways as they improve. Selling worlds is selling depreciating assets; selling the pipeline is a subscription to the moving frontier of real failure.
-- **Provenance is now the first question.** Post-Grok-Build, "how do I know this is safe to train on?" precedes "is it good?" The certificate is the answer.
+- **Reward where they have none.** Verifiable reward exists for code (tests pass) and math (answers check), essentially none for judgment-heavy professional work. Verifiers turn an expert's judgment into machine-checkable reward.
+- **Difficulty at the learnable frontier.** RL only works on tasks a model fails *sometimes*; a measured reproduction rate is a pre-qualified difficulty label. At ~$2,400 of RL compute per task, cheap tasks waste money ([Mechanize](https://www.mechanize.work/blog/cheap-rl-tasks-will-waste-compute/)).
+- **A frontier that refreshes.** Worlds saturate once a model passes them reliably, and clean synthetic curricula saturate fastest. This source is renewable: experts keep working, models keep failing in new ways. Selling worlds is selling depreciating assets; selling the pipeline is a subscription to the moving frontier.
+- **Provenance is now the first question.** Post-Grok-Build, "is this safe to train on?" precedes "is it good?" The certificate is the answer.
 
 ---
 
 ## 2. What comes in
 
-Three inputs. The trace alone is not enough — that mistake produces a twin tidier than reality, and tidy worlds do not reproduce real failures.
+Three inputs. The trace alone is not enough: it produces a twin tidier than reality, and tidy worlds don't reproduce real failures.
 
 ```jsonc
 // 1. THE TRACE — exported agent chat history (Claude Code / Codex .jsonl)
@@ -70,11 +74,11 @@ Three inputs. The trace alone is not enough — that mistake produces a twin tid
   "why":      "understates deductible expenses" }
 ```
 
-- **Trace** — what the model saw, through a keyhole. Every file it opened and what came back.
-- **Manifest** — the shape of the whole room. Cheap to capture, trivially anonymized, and it is what prevents the tidy-twin failure mode.
-- **Correction** — ground truth, and it is free: the expert was doing their own work, not authoring a benchmark. This is the scarce input and the reason the whole thing is cheap.
+- **Trace** — what the model saw, through a keyhole.
+- **Manifest** — the shape of the whole room. Cheap, trivially anonymized, and the thing that prevents the tidy-twin failure.
+- **Correction** — ground truth, and it's free: the expert was doing their own work, not authoring a benchmark. The scarce input, and the reason this is cheap.
 
-Plus a **consent + scope declaration** riding alongside — which fields may be reused, which must be replaced.
+Plus a **consent + scope declaration**: which fields may be reused, which must be replaced.
 
 ### Where traces come from
 
@@ -106,9 +110,9 @@ Two artifacts. That is the whole deliverable.
 }
 ```
 
-A bootable disk and a reward function — i.e. `(initial state, task, reward)`. That is a training environment in the form an RL engineer already thinks in.
+A bootable disk and a reward function — `(initial state, task, reward)`, the form an RL engineer already thinks in.
 
-Shipped alongside for a real sale: the **reproduction report** (failure rate over N runs) and the **certificate** (substitution scan clean, re-identification attempt failed, consent recorded).
+Shipped alongside for a real sale: **reproduction report** (failure rate over N runs) and **certificate** (substitution scan clean, re-identification failed, consent recorded).
 
 ---
 
