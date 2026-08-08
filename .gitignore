@@ -1,0 +1,14 @@
+# dirty room — real inputs and the substitution map NEVER ship
+dirty/
+*substitution_map*
+*.jsonl            # traces: real chat history and run transcripts are all jsonl
+
+# generated run artifacts
+out*/
+runs/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.env
