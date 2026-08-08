@@ -31,6 +31,10 @@ Each run copies the case into a fresh `run-NN/` (the original is never touched) 
 
 Models: `--provider anthropic` (default, `ANTHROPIC_API_KEY`) or `--provider openai` for any OpenAI-compatible endpoint — for Grok: `--provider openai --base-url https://api.x.ai/v1 --model grok-4` (`XAI_API_KEY`).
 
+## The skill: run the factory inside any harness
+
+The pipeline's judgment layer also ships as an agent skill — [.claude/skills/sandbox-twins/SKILL.md](.claude/skills/sandbox-twins/SKILL.md). Open this repo in Claude Code (or any skill-reading harness) where the expert already works: the harness has the trace, the case dir, and the correction in place, and its own tools do the mapping and fabrication. The skill is *required* to shell out to the deterministic layer — `scan.py` (packaging gate: exits nonzero on any surviving real entity), `runner.py`, `grader.py` — because guarantees live in code, not prose. `pipeline.py` below is the same factory as a headless batch process.
+
 ## 2. `pipeline.py` — the factory: trace in, twin out
 
 ```bash

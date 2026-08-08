@@ -50,7 +50,11 @@ def judge(args, prompt):
     model = args.judge_model or args.model
     try:
         return one_shot(args.provider, model, args.base_url, JUDGE_SYSTEM,
-                        [text_block(prompt)], force_json=True)
+                        [text_block(prompt)], force_json=True,
+                        schema={"type": "object",
+                                "properties": {"rationale": {"type": "string"},
+                                               "pass": {"type": "boolean"}},
+                                "required": ["rationale", "pass"]})
     except ValueError as e:
         return {"rationale": str(e), "pass": False}
 

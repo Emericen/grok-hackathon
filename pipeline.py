@@ -91,9 +91,15 @@ def raw_manifest(case_dir):
 # ------------------------------------------------------------------ stage 2
 
 MAP_SYSTEM = """You build substitution maps for anonymizing professional case files. Given an \
-agent trace, a file tree, and an expert correction, list every real-world entity that must be \
-replaced (people, companies, ID numbers, addresses, account numbers, exact amounts, dates, \
-filenames containing names) and invent a consistent fabricated replacement for each.
+agent trace, a file tree, extracted case-file text, and an expert correction, list every \
+real-world entity that must be replaced (people, companies, ID/registration numbers, project \
+names and codes, addresses, account numbers, distinctive amounts, filenames containing names) \
+and invent a consistent fabricated replacement for each.
+
+Map the CASE, exhaustively: every named party, every identifier, every project name/code, and \
+every distinctive amount appearing in the case-file text or the correction gets an entry. The \
+operator's own machine details in the trace (usernames, local paths) are not case entities — \
+ignore them; they never ship.
 
 Preserve every constraint the case's traps depend on: replacement IDs keep format and length, \
 dates keep their ordering and relative intervals, amounts that must reconcile still reconcile \
@@ -107,6 +113,21 @@ Respond with JSON only:
  "filenames": {"<real relative path>": "<twin relative path>"},
  "notes": "constraints that span entities"}"""
 
+
+
+MAP_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "entities": {"type": "array", "items": {
+            "type": "object",
+            "properties": {"real": {"type": "string"}, "fake": {"type": "string"},
+                           "kind": {"type": "string"}, "constraints": {"type": "string"}},
+            "required": ["real", "fake", "kind"]}},
+        "filenames": {"type": "object", "additionalProperties": {"type": "string"}},
+        "notes": {"type": "string"},
+    },
+    "required": ["entities", "filenames"],
+}
 
 # ------------------------------------------------------------------ stage 3
 
@@ -200,6 +221,21 @@ Respond with JSON only:
                                "criteria": "...", "enumerate": "<dir, coverage only>"}]}"""
 
 
+
+VERIFY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "task": {"type": "string"},
+        "verifiers": {"type": "array", "items": {
+            "type": "object",
+            "properties": {"id": {"type": "string"},
+                           "type": {"type": "string", "enum": ["output", "negative", "coverage"]},
+                           "criteria": {"type": "string"}, "enumerate": {"type": "string"}},
+            "required": ["id", "type", "criteria"]}},
+    },
+    "required": ["task", "verifiers"],
+}
+
 # ------------------------------------------------------------------ stage 5
 
 def substitution_scan(fs_dir, sub_map):
@@ -248,11 +284,18 @@ def main():
     correction = Path(args.correction).read_text()
 
     print("[2/5] substitution map")
+    case_texts = []
+    for rel in manifest["tree"]:
+        blocks = extract(Path(args.case) / rel)
+        text = "\n".join(b["text"] for b in blocks if b["type"] == "text")
+        case_texts.append(f"----- {rel} -----\n{text[:2500]}")
     prompt = (f"TRACE:\n{digest}\n\nFILE TREE ({manifest['files']} files):\n"
               + "\n".join(manifest["tree"])
+              + "\n\nCASE FILE TEXT (extracted, partial — scanned files yield little):\n\n"
+              + "\n\n".join(case_texts)
               + f"\n\nEXPERT CORRECTION:\n{correction}")
     sub_map = one_shot(args.provider, args.model, args.base_url,
-                       MAP_SYSTEM, [text_block(prompt)], force_json=True)
+                       MAP_SYSTEM, [text_block(prompt)], force_json=True, schema=MAP_SCHEMA)
     map_path = dirty / "substitution_map.json"
     map_path.write_text(json.dumps(sub_map, indent=2, ensure_ascii=False))
     print(f"  {len(sub_map['entities'])} entities -> {map_path} (never ships)")
@@ -280,7 +323,7 @@ def main():
               f"TWIN FILE CONTENTS (use THESE names/amounts/dates in criteria):\n\n"
               + "\n\n".join(twin_contents))
     task_json = one_shot(args.provider, args.model, args.base_url,
-                         VERIFY_SYSTEM, [text_block(prompt)], force_json=True)
+                         VERIFY_SYSTEM, [text_block(prompt)], force_json=True, schema=VERIFY_SCHEMA)
 
     print("[5/5] package")
     hits = substitution_scan(fab_fs, sub_map)

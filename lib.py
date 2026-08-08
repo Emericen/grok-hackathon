@@ -42,9 +42,7 @@ def extract(path):
         except Exception as e:
             return [text_block(f"<unreadable: {e}>")]
     if ext in IMAGE_EXTS:
-        media = "image/png" if ext == ".png" else "image/jpeg"
-        data = base64.b64encode(path.read_bytes()).decode()
-        return [image_block(data, media)]
+        return [load_image(path)]
     if ext == ".pdf":
         return extract_pdf(path)
     if ext == ".docx":
@@ -52,6 +50,19 @@ def extract(path):
     if ext == ".xlsx":
         return [text_block(extract_xlsx(path))]
     return [text_block(f"<binary file: {path.name}, {path.stat().st_size} bytes>")]
+
+
+
+def load_image(path, max_dim=1500):
+    """Image file -> block, downscaled to API-safe dimensions (many-image limit is 2000px)."""
+    import io
+    from PIL import Image
+    img = Image.open(path)
+    if max(img.size) > max_dim:
+        img.thumbnail((max_dim, max_dim))
+    buf = io.BytesIO()
+    img.convert("RGB").save(buf, "JPEG", quality=85)
+    return image_block(base64.b64encode(buf.getvalue()).decode(), "image/jpeg")
 
 
 def extract_pdf(path):
@@ -71,8 +82,7 @@ def extract_pdf(path):
             capture_output=True, timeout=60,
         )
         for page in sorted(Path(td).glob("p*.png")):
-            data = base64.b64encode(page.read_bytes()).decode()
-            blocks.append(image_block(data, "image/png"))
+            blocks.append(load_image(page))
     return blocks
 
 
@@ -155,11 +165,13 @@ class Anthropic:
             return {"type": "image", "source": {"type": "base64", "media_type": b["media_type"], "data": b["data"]}}
         return b
 
-    def call(self, system, tools):
+    def call(self, system, tools, force_tool=None):
         payload = {
             "model": self.model, "max_tokens": 8192, "system": system, "messages": self.messages,
             "tools": [{"name": t["name"], "description": t["description"], "input_schema": t["parameters"]} for t in tools],
         }
+        if force_tool:
+            payload["tool_choice"] = {"type": "tool", "name": force_tool}
         resp = http_json(self.url, {
             "content-type": "application/json", "x-api-key": self.key, "anthropic-version": "2023-06-01",
         }, payload)
@@ -205,12 +217,14 @@ class OpenAICompat:
                 out.append({"type": "text", "text": b["text"]})
         return out
 
-    def call(self, system, tools):
+    def call(self, system, tools, force_tool=None):
         msgs = [{"role": "system", "content": system}] + self.messages
         payload = {
             "model": self.model, "messages": msgs, "max_tokens": 8192,
             "tools": [{"type": "function", "function": t} for t in tools],
         }
+        if force_tool:
+            payload["tool_choice"] = {"type": "function", "function": {"name": force_tool}}
         resp = http_json(self.url, {
             "content-type": "application/json", "authorization": f"Bearer {self.key}",
         }, payload)
@@ -236,16 +250,22 @@ def add_provider_args(parser):
                         help="OpenAI-compatible endpoint (xAI: https://api.x.ai/v1)")
 
 
-def one_shot(provider, model, base_url, system, prompt_blocks, force_json=False):
-    """Single stateless LLM call. Returns text; with force_json, returns parsed JSON."""
+def one_shot(provider, model, base_url, system, prompt_blocks, force_json=False, schema=None):
+    """Single stateless LLM call. Returns text; with force_json, forces the answer
+    through a schema-carrying tool call so the API guarantees valid, shaped JSON."""
     p = make_provider(provider, model, base_url)
     p.add_user(prompt_blocks)
-    text, _ = p.call(system, [])
     if not force_json:
+        text, _ = p.call(system, [])
         return text
-    m = re.search(r"\{.*\}|\[.*\]", text, re.S)
-    if not m:
-        raise ValueError(f"no JSON in model output: {text[:300]}")
-    return json.loads(m.group())
+    emit = {"name": "emit_json",
+            "description": "Emit the complete final result. Every field filled — never empty.",
+            "parameters": schema or {"type": "object", "additionalProperties": True}}
+    system = system + "\n\nCall emit_json exactly once with the COMPLETE result as its argument."
+    text, calls = p.call(system, [emit], force_tool="emit_json")
+    for c in calls:
+        if c["name"] == "emit_json" and c["args"]:
+            return c["args"]
+    raise ValueError(f"model returned no/empty emit_json: {text[:300]}")
 
 
