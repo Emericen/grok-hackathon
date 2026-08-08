@@ -1,4 +1,4 @@
-# Sandbox twins from real expert failures
+# Sandbox Twins
 
 **A data pipeline that turns real experts' AI-failure moments into anonymized, verifier-scored sandbox twins that frontier labs can legally train on.**
 
