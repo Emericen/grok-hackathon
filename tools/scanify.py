@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# REFERENCE IMPLEMENTATION — reuse the degradation profiles (flatbed/photocopy/phone),
+# not the hardcoded paths/PROFILE table, which belong to the project this came from.
 # Degrades the clean PDFs into shoebox realism. Three conditions:
 #   flatbed   — slight rotation, paper tone, sensor noise, mid JPEG quality
 #   photocopy — grayscale gen-2 copy: blur, harsh contrast, edge band, heavy noise

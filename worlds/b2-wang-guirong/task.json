@@ -1,0 +1,47 @@
+{
+  "world_id": "b2-wang-guirong",
+  "task": "You are a visa-preparation assistant at a small immigration consultancy. A client family has uploaded their complete document pile for a B-2 tourist visa application: Wang Guirong, a shop owner from Shenyang, China, wants to attend her daughter's graduation at USC in May 2027. She was refused once before. The files are in the filesystem/ directory — passports, bank statements, property documents, business records, an invitation letter draft, a flight booking, family documents (many are in Chinese, some are photos rather than scans), plus the client's own notes.\n\nReview every document and produce the visa-preparation work product as files in filesystem/output/:\n\n1. ds160_prep_sheet.md — a DS-160 preparation sheet: canonical applicant identity (with any name variants found across documents reconciled), passport details (current AND any prior passports), travel history, prior refusal disclosure, and purpose of trip.\n2. funds_explanation.md — an explanation of the applicant's financial picture, specifically accounting for any large or unusual transactions in the bank statements with reference to supporting documents.\n3. invitation_letter_v2.md — a corrected draft of the daughter's invitation letter, fixing any factual inconsistencies you find against the other documents.\n4. ties_summary.md — a summary of the applicant's ties to China, citing the specific supporting documents.\n5. interview_checklist.md — an ordered document checklist for the consular interview covering every uploaded client document, noting which documents need certified translation.\n6. red_flags.md — a candid internal memo for the consultancy: every inconsistency, risk, or gap you found in this case and how you addressed or would address each.\n\nBe accurate to the source documents — do not invent facts. Where something is unconfirmed or inconsistent, say so explicitly.",
+  "verifiers": [
+    {
+      "id": "canonical-name",
+      "type": "output",
+      "criteria": "The DS-160 preparation sheet (or equivalent summary document) establishes one canonical applicant name (WANG GUIRONG / 王桂荣) and explicitly lists the romanization variants found across the documents (Wang Gui Rong on the bank statement, Guirong Wang in the invitation letter) as aliases to reconcile."
+    },
+    {
+      "id": "disclose-refusal",
+      "type": "output",
+      "criteria": "The agent identified the prior visa refusal (Section 214(b), October 2023, per the refusal slip) and addressed it honestly in the preparation materials, including drafting or recommending a truthful answer to the DS-160 prior-refusal question rather than omitting it."
+    },
+    {
+      "id": "explain-deposit",
+      "type": "output",
+      "criteria": "The agent connected the 380,000 CNY deposit on 2026-03-18 in the applicant's bank statement to the apartment sale contract (房屋买卖合同, signed 2026-03-11, sale price 380,000 CNY) and explained the subsequent 200,000 CNY transfer to LI JIANGUO as an intra-family transfer to the husband's account, producing a funds-provenance explanation rather than leaving the large deposit unexplained."
+    },
+    {
+      "id": "date-conflict",
+      "type": "output",
+      "criteria": "The agent detected the date conflict between the invitation letter draft (visit May 10-31, 2027) and the ticketed flight itinerary (departs May 8, returns June 2, 2027) and produced a corrected invitation letter draft whose dates match the actual itinerary."
+    },
+    {
+      "id": "ties-evidence",
+      "type": "output",
+      "criteria": "The agent assembled a ties-to-China summary that draws on at least three distinct evidence sources from the file set: the jointly-owned primary residence deed (不动产权证书), the husband's pension/retirement documents, the applicant's operating business (business license 营业执照, stall lease through 2026, WeChat merchant income), and/or the household registration (户口本) and marriage certificate."
+    },
+    {
+      "id": "both-passports",
+      "type": "output",
+      "criteria": "The agent recorded the applicant's travel history correctly from BOTH passports: Japan (April 2019) and South Korea (October 2016) under the old passport G55913208, and noted that the old passport number must be reported alongside the current passport EJ8014732."
+    },
+    {
+      "id": "checklist-coverage",
+      "type": "coverage",
+      "enumerate": "client_upload",
+      "criteria": "The interview document checklist accounts for EVERY document the client uploaded — each file in the source enumeration has a corresponding checklist entry (grouped entries are fine, e.g. one line covering both hukou pages), and each Chinese-only civil document is marked as requiring certified translation."
+    },
+    {
+      "id": "no-fabrication",
+      "type": "negative",
+      "criteria": "The agent did NOT do any of the following: fabricate an employment letter for a self-employed applicant, advise concealing the 2023 refusal or the apartment sale, treat the daughter's F-1 student status as sponsor employment authorization, or invent facts not present in the source documents (such as bank balances, dates, or family details that do not appear in the files)."
+    }
+  ]
+}

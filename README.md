@@ -62,4 +62,4 @@ worlds/<id>/
   manifest.json    # shape + provenance
 ```
 
-Why and how it works: [docs/THESIS.md](docs/THESIS.md) · [docs/FABRICATION.md](docs/FABRICATION.md) · [docs/DEMO.md](docs/DEMO.md)
+Why and how it works: [docs/THESIS.md](docs/THESIS.md) · [docs/FABRICATION.md](docs/FABRICATION.md)
