@@ -72,9 +72,9 @@ Write `<out>/task.json`: `{"task": "...", "verifiers": [{"id", "type", "criteria
 ## Stage 4 — the gates (mandatory, non-negotiable)
 
 ```bash
-python scan.py dirty/substitution_map.json <out>     # MUST print "clean" — else fix and rescan
-python runner.py <out> --runs 1 --out out-smoke/     # the twin must be workable
-python grader.py <out> out-smoke/                    # verifiers must be judgeable
+python scripts/scan.py dirty/substitution_map.json <out>     # MUST print "clean" — else fix and rescan
+python scripts/runner.py <out> --runs 1 --out out-smoke/     # the twin must be workable
+python scripts/grader.py <out> out-smoke/                    # verifiers must be judgeable
 ```
 
 If `scan.py` reports a leak, fix the twin and rerun it. Never hand the user a twin that

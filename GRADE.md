@@ -6,7 +6,7 @@ Grade them.
 
 ```bash
 [ -d twin-pipeline ] || git clone https://github.com/Emericen/grok-hackathon twin-pipeline
-python3 twin-pipeline/grader.py . --in-place
+python3 twin-pipeline/scripts/grader.py . --in-place
 ```
 
 That's the entire job: run it, show the user the full colored output — every verifier's

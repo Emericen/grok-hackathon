@@ -37,10 +37,10 @@ Tell the agent to fetch and follow each file. Both instruct the harness to clone
 
 ```bash
 # on a REAL case (dirty room: stays on this machine)
-python runner.py path/to/real-case --task "prepare the filing review" --out dirty/case-run
+python scripts/runner.py path/to/real-case --task "prepare the filing review" --out dirty/case-run
 
 # on a TWIN world (task comes from its task.json), 10 times for a reproduction rate
-python runner.py worlds/b2-wang-guirong --runs 10 --out out/
+python scripts/runner.py worlds/b2-wang-guirong --runs 10 --out out/
 ```
 
 Each run copies the case into a fresh `run-NN/` (the original is never touched) and gives the agent three tools: `bash`, `read_file` (images, scanned PDFs, docx, xlsx all rendered readable), `write_file`. It leaves `transcript.jsonl` plus whatever files it changed.
@@ -54,7 +54,7 @@ The pipeline's judgment layer also ships as an agent skill — [.claude/skills/s
 ## 2. `pipeline.py` — the factory: trace in, twin out
 
 ```bash
-python pipeline.py dirty/case-run/transcript.jsonl \
+python scripts/pipeline.py dirty/case-run/transcript.jsonl \
     --case path/to/real-case \        # for the manifest: the shape of the whole folder
     --correction dirty/correction.md \ # the expert's fix, freeform text
     --out worlds/my-twin
@@ -71,7 +71,7 @@ Output: `worlds/my-twin/` with `filesystem/` + `task.json` + `manifest.json`.
 ## 3. `grader.py` — diff, judge, table
 
 ```bash
-python grader.py worlds/b2-wang-guirong out/
+python scripts/grader.py worlds/b2-wang-guirong out/
 ```
 
 For each run: diff changed files against the pristine world, extract their text, one LLM call per verifier → `{rationale, pass}`. Then the aggregate table: pass/fail per verifier per run, and the headline reproduction rate. Verifier types: `output` (must be present), `negative` (must be absent), `coverage` (code enumerates the source files, the judge only does the fuzzy matching — never ask an LLM to count).

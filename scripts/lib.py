@@ -17,8 +17,9 @@ import zipfile
 from pathlib import Path
 
 # .env autoload: repo-local keys work with zero setup; existing env vars win
-_env = Path(__file__).parent / ".env"
-if _env.exists():
+for _env in (Path(__file__).parent / ".env", Path(__file__).parent.parent / ".env"):
+    if not _env.exists():
+        continue
     for _line in _env.read_text().splitlines():
         _line = _line.strip()
         if _line and not _line.startswith("#") and "=" in _line:

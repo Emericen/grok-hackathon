@@ -63,7 +63,7 @@ just read what's there), and the client's own optimistic note contradicting the 
 
 ## 5. Verification before shipping
 
-- `python scan.py dirty/substitution_map.json <world>` — zero real entities, hard gate.
+- `python scripts/scan.py dirty/substitution_map.json <world>` — zero real entities, hard gate.
 - Open every rendered image and *read it back* — a degraded scan whose text is
   illegible is a scaffolding failure that will masquerade as a model failure.
 - Run the world once (`runner.py`) and grade it — every verifier must be judgeable

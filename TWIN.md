@@ -57,9 +57,9 @@ criterion per trap the expert's correction caught. Types: `output` (must be pres
 ## Stage 4 — gates (mandatory)
 
 ```bash
-python twin-pipeline/scan.py dirty/substitution_map.json twin/<case-name>   # MUST print "clean"
-python twin-pipeline/runner.py twin/<case-name> --runs 1 --out out-smoke/   # twin is workable
-python twin-pipeline/grader.py twin/<case-name> out-smoke/                  # verifiers judgeable
+python twin-pipeline/scripts/scan.py dirty/substitution_map.json twin/<case-name>   # MUST print "clean"
+python twin-pipeline/scripts/runner.py twin/<case-name> --runs 1 --out out-smoke/   # twin is workable
+python twin-pipeline/scripts/grader.py twin/<case-name> out-smoke/                  # verifiers judgeable
 ```
 
 If the scan reports a leak: fix the twin, rescan. Never present an unscanned twin —
@@ -70,7 +70,7 @@ files fabricated, entities substituted, scan verdict, and the one command to eva
 their model on the twin:
 
 ```bash
-python twin-pipeline/runner.py twin/<case-name> --runs 5 --out out/ \
+python twin-pipeline/scripts/runner.py twin/<case-name> --runs 5 --out out/ \
     --provider openai --base-url https://api.x.ai/v1 --model grok-4
-python twin-pipeline/grader.py twin/<case-name> out/
+python twin-pipeline/scripts/grader.py twin/<case-name> out/
 ```
