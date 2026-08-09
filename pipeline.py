@@ -88,6 +88,37 @@ def raw_manifest(case_dir):
     return {"files": len(files), "types": types, "tree": tree}
 
 
+
+def valid_map(m):
+    if not isinstance(m, dict) or not isinstance(m.get("entities"), list):
+        return False
+    ents = m["entities"]
+    if len(ents) < 5:
+        return False
+    return all(isinstance(e, dict) and isinstance(e.get("real"), str)
+               and isinstance(e.get("fake"), str) for e in ents)
+
+
+def valid_task(t):
+    if not isinstance(t, dict) or not isinstance(t.get("task"), str):
+        return False
+    vs = t.get("verifiers")
+    if not isinstance(vs, list) or not vs:
+        return False
+    return all(isinstance(v, dict) and isinstance(v.get("criteria"), str)
+               and v.get("type") in ("output", "negative", "coverage") for v in vs)
+
+
+def one_shot_valid(validate, *args, **kwargs):
+    """one_shot + structural validation; retry because tool-input schemas are advisory."""
+    for attempt in range(3):
+        result = one_shot(*args, **kwargs)
+        if validate(result):
+            return result
+        print(f"    malformed structure (attempt {attempt + 1}/3), retrying", file=sys.stderr)
+    sys.exit("structured call kept returning malformed output — aborting")
+
+
 # ------------------------------------------------------------------ stage 2
 
 MAP_SYSTEM = """You build substitution maps for anonymizing professional case files. Given an \
@@ -294,8 +325,8 @@ def main():
               + "\n\nCASE FILE TEXT (extracted, partial — scanned files yield little):\n\n"
               + "\n\n".join(case_texts)
               + f"\n\nEXPERT CORRECTION:\n{correction}")
-    sub_map = one_shot(args.provider, args.model, args.base_url,
-                       MAP_SYSTEM, [text_block(prompt)], force_json=True, schema=MAP_SCHEMA)
+    sub_map = one_shot_valid(valid_map, args.provider, args.model, args.base_url,
+                              MAP_SYSTEM, [text_block(prompt)], force_json=True, schema=MAP_SCHEMA)
     map_path = dirty / "substitution_map.json"
     map_path.write_text(json.dumps(sub_map, indent=2, ensure_ascii=False))
     print(f"  {len(sub_map['entities'])} entities -> {map_path} (never ships)")
@@ -322,8 +353,8 @@ def main():
               f"SUBSTITUTION MAP:\n{json.dumps(sub_map, ensure_ascii=False)}\n\n"
               f"TWIN FILE CONTENTS (use THESE names/amounts/dates in criteria):\n\n"
               + "\n\n".join(twin_contents))
-    task_json = one_shot(args.provider, args.model, args.base_url,
-                         VERIFY_SYSTEM, [text_block(prompt)], force_json=True, schema=VERIFY_SCHEMA)
+    task_json = one_shot_valid(valid_task, args.provider, args.model, args.base_url,
+                                VERIFY_SYSTEM, [text_block(prompt)], force_json=True, schema=VERIFY_SCHEMA)
 
     print("[5/5] package")
     hits = substitution_scan(fab_fs, sub_map)
