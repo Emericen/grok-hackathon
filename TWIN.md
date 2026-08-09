@@ -1,76 +1,75 @@
-# TWIN.md — one-line twin factory for any agent harness
+# TWIN.md — make an anonymized twin of the case in this directory
 
-You are an agent inside a coding harness, and the user has asked you to follow this file.
-Your job: replicate the case in the current working directory into an **anonymized twin
-world** — same story, same disorder, same traps, every real-world fact replaced — then
-prove the twin works. Follow every stage. The gates at the end are not optional.
-
-## Setup
+You are an agent in a coding harness. Build a twin of this case: **same documents, same
+numbers, only the identities changed.** Amounts stay frozen so every trap transfers
+exactly (production re-derives amounts under constraints; this is the fast dial).
 
 ```bash
-git clone https://github.com/Emericen/grok-hackathon twin-pipeline   # scripts + docs
+[ -d twin-pipeline ] || git clone https://github.com/Emericen/grok-hackathon twin-pipeline
 ```
 
-Confirm you have, or ask the user for:
-1. **The case** — the working directory of real files (never modified, never shipped).
-2. **The correction** — what the expert said was wrong with the agent work done on this
-   case (it may be earlier in this very conversation). This defines the verifiers.
-3. **The trace** — the earlier back-and-forth on this case (this conversation, or a
-   session transcript). If the work happened here, you already have it.
+## 1. Map the identities
 
-## Stage 1 — substitution map (dirty room)
-
-Create `dirty/` (add it to .gitignore) and write `dirty/substitution_map.json`:
+Write `dirty/substitution_map.json` (mkdir dirty; add `dirty/` to .gitignore):
 
 ```json
-{"entities": [{"real": "...", "fake": "...", "kind": "person|org|id|amount|date|address|other",
-               "constraints": "..."}],
- "filenames": {"<real relative path>": "<twin relative path>"}}
+{"entities": [{"real": "Danny Kowalski", "fake": "...", "kind": "person"}, ...],
+ "filenames": {"<old name>": "<new name>"}}
 ```
 
-Exhaustive over the CASE: every named party, identifier, project/account number, address,
-distinctive amount, and every filename that leaks a name. Constraints preserve the traps:
-IDs keep format and length; dates keep ordering and intervals; amounts that must
-reconcile still reconcile — state the arithmetic and verify it with code. Names keep
-locale and script. The map never leaves `dirty/`; never echo real↔fake pairs anywhere else.
+Map ONLY identities: people, company names, addresses, bank/processor names, account
+numbers, EIN/SSN fragments, emails, phone numbers, and any filename containing a name.
+Numbers, dates, and amounts DO NOT change. Same real entity → same fake, everywhere.
 
-## Stage 2 — fabricate the twin
+## 2. Build the twin
 
-Write `twin/<case-name>/filesystem/` — one twin file per real file:
+Create `twin/<new-company-slug>/filesystem/`. For every file in the case:
 
-- Apply the map exactly and consistently; use the mapped filenames.
-- Client-made files stay native (.xlsx with its formulas — including deliberately wrong
-  ones, .docx); institutional scans become rendered images (draw with PIL, then degrade:
-  `twin-pipeline/tools/scanify.py` has flatbed/photocopy/phone profiles); phone photos
-  get perspective and warm cast. Full playbook: `twin-pipeline/docs/FABRICATION.md`.
-- Preserve disorder: bad filenames, near-duplicates, mixed languages, and any
-  deliberately ABSENT document. Never send a real scan to an image model.
+- **No mapped string in it** (most receipts, generic vendor slips): copy unchanged.
+- **Text-like** (txt/md/csv): rewrite with the swaps applied.
+- **.xlsx**: use `openpyxl` — load, walk cells, replace mapped strings in string cells,
+  save. **Never touch formulas or numeric cells** (a client's broken formula is a trap;
+  keep it broken):
+  ```python
+  import openpyxl
+  wb = openpyxl.load_workbook(src)          # keeps formulas
+  for ws in wb.worksheets:
+      for row in ws.iter_rows():
+          for c in row:
+              if isinstance(c.value, str):
+                  for real, fake in swaps.items():
+                      c.value = c.value.replace(real, fake)
+  wb.save(dst)
+  ```
+- **.docx**: it's a zip — replace strings inside `word/document.xml`, rezip.
+- **Scanned PDFs / photos that contain mapped identities** (IRS letters, bank
+  statements, 1099s, insurance): re-render with PIL, then degrade so it still looks
+  scanned. Draw title + label/value lines with the SAME numbers, swapped names:
+  ```python
+  from PIL import Image, ImageDraw, ImageFont
+  font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 36)
+  img = Image.new("RGB", (1700, 2200), "#f7f5ef"); d = ImageDraw.Draw(img)
+  d.text((120, 100), title, fill="#111", font=font)   # then one d.text per line
+  ```
+  Then degrade with `twin-pipeline/tools/scanify.py`'s profiles (flatbed: rotate ~0.6°
+  + noise + mild blur; phone: rotate ~2°, warm overlay, blur). Save jpg/pdf with the
+  mapped filename. Read your render back to confirm it's legible.
 
-## Stage 3 — task + verifiers
+Write a small python script for the bulk work instead of editing file-by-file.
 
-Write `twin/<case-name>/task.json`: the original ask rephrased in twin facts with
-concrete deliverables under `filesystem/output/`, plus verifiers — one plain-English
-criterion per trap the expert's correction caught. Types: `output` (must be present),
-`negative` (exactly one, "did NOT ..."), `coverage` ("every X accounted for", with
-`enumerate` naming the source dir). Criteria reference ONLY twin entities.
+## 3. task.json
 
-## Stage 4 — gates (mandatory)
+Write `twin/<slug>/task.json`: `{"task": "...", "verifiers": [...]}` — the engagement
+task phrased with the fake names, and one verifier per trap the expert's corrections
+caught in this conversation (`{"id", "type": "output|negative", "criteria"}`, criteria
+cite the exact frozen numbers, fake names only).
+
+## 4. Gate (mandatory)
 
 ```bash
-python twin-pipeline/scripts/scan.py dirty/substitution_map.json twin/<case-name>   # MUST print "clean"
-python twin-pipeline/scripts/runner.py twin/<case-name> --runs 1 --out out-smoke/   # twin is workable
-python twin-pipeline/scripts/grader.py twin/<case-name> out-smoke/                  # verifiers judgeable
+python3 twin-pipeline/scripts/scan.py dirty/substitution_map.json twin/<slug>
 ```
 
-If the scan reports a leak: fix the twin, rescan. Never present an unscanned twin —
-both leaks caught in this pipeline's own testing were "obvious" substitutions the
-fabricator missed. Finish with `twin/<case-name>/manifest.json` (file count, types,
-tree, provenance: scan result, entity count, consent noted, date) and tell the user:
-files fabricated, entities substituted, scan verdict, and the one command to evaluate
-their model on the twin:
-
-```bash
-python twin-pipeline/scripts/runner.py twin/<case-name> --runs 5 --out out/ \
-    --provider openai --base-url https://api.x.ai/v1 --model grok-4
-python twin-pipeline/scripts/grader.py twin/<case-name> out/
-```
+MUST print `clean`. If it reports a leak, fix that file and rescan — never hand over
+an unscanned twin. Then tell the user: files copied vs re-made, entities swapped,
+scan verdict, and the twin's path.
