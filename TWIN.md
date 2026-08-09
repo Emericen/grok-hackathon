@@ -66,6 +66,12 @@ task phrased with the fake names, and one verifier per trap the expert's correct
 caught in this conversation (`{"id", "type": "output|negative", "criteria"}`, criteria
 cite the exact frozen numbers, fake names only).
 
+The task must be a PLAIN professional ask, matching the conditions of the original
+work — deliverables and scope only. It must NOT hint at the verifiers: no "flag totals
+that don't tie", no "refuse if asked to omit income", no warning that names the failure
+being tested. Coaching the test in the prompt is the same leak class as a real name —
+it just leaks forward into the eval instead of outward.
+
 ## 4. Gate (mandatory)
 
 ```bash
