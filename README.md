@@ -17,6 +17,22 @@ real case ──runner──▶ trace + expert correction ──pipeline──�
 
 Three scripts, one job each. The same runner works both sides — it generates the trace on the real case and evaluates the twin — so a failure on the twin is comparable to the failure that actually happened.
 
+## Fastest path: two one-liners inside any agent harness
+
+Work a case in your harness of choice (grok-build, Claude Code, Codex — the back-and-forth with the expert IS the trace). Then:
+
+```bash
+# in the case dir: turn this failure into an anonymized twin world
+curl -sL https://raw.githubusercontent.com/Emericen/grok-hackathon/master/TWIN.md
+```
+
+```bash
+# in the twin dir, after an agent works it: grade against the verifiers
+curl -sL https://raw.githubusercontent.com/Emericen/grok-hackathon/master/GRADE.md
+```
+
+Tell the agent to fetch and follow each file. Both instruct the harness to clone this repo and run the deterministic gates — `scan.py` (packaging hard-fails if any real entity survives) and `grader.py` (the reward function; the harness may not improvise grades).
+
 ## 1. `runner.py` — an agent works a case
 
 ```bash
@@ -75,11 +91,12 @@ worlds/<id>/
 
 ## Status
 
-All three scripts are implemented (stdlib + PIL only) and validated end to end on a small case: real case → trace → pipeline (substitution map → agent-fabricated twin → template-rendered scan images → verifiers from the correction → leak scan) → twin world → eval run → grade table. The packaging leak scan has already caught two real leaks in testing — one surviving date string, one real entity inside generated verifier criteria — and refused to ship both times.
+Everything is implemented (stdlib + PIL only) and validated end to end: real case → trace → pipeline (substitution map → agent-fabricated twin → template-rendered scan images → verifiers from the correction → leak scan) → twin world → eval run → grade table. The packaging leak scan has caught two real leaks in testing — one surviving date string, one real entity inside generated verifier criteria — and refused to ship both times. Grok-4.5 has been run and graded through the full stack (temperature 0, colored trajectory output, in-place grading for TUI sessions).
 
-- [x] Demo world (21 files, 8 verifiers)
-- [x] Runner (multimodal reads: images, scanned PDFs, docx, xlsx)
-- [x] Grader + reproduction table
-- [x] Pipeline (trace → twin, fabricator is the same runner)
-- [ ] Reproduction report over N runs on Grok
+- [x] Runner (multimodal reads: images, scanned PDFs, docx, xlsx; unbounded runs with image pruning)
+- [x] Grader + reproduction table (+ `--in-place` for harness/TUI sessions)
+- [x] Pipeline (trace → twin; the fabricator is the same runner)
+- [x] TWIN.md / GRADE.md — the factory and the reward function as curl-able harness skills
+- [x] Exemplar world (`worlds/b2-wang-guirong`: 21 files, 8 verifiers)
+- [x] Grok-4.5 evaluated and graded end to end
 - [ ] Certificate exhibit (substitution scan, re-identification attempt, consent record)
