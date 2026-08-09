@@ -16,6 +16,15 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+# .env autoload: repo-local keys work with zero setup; existing env vars win
+_env = Path(__file__).parent / ".env"
+if _env.exists():
+    for _line in _env.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 # ---------------------------------------------------------------- extractors
 
 TEXT_EXTS = {".txt", ".md", ".json", ".csv", ".html", ".xml", ".yml", ".yaml"}
@@ -170,6 +179,22 @@ class Anthropic:
             return {"type": "image", "source": {"type": "base64", "media_type": b["media_type"], "data": b["data"]}}
         return b
 
+    def prune_images(self, keep=10):
+        seen = 0
+        for msg in reversed(self.messages):
+            content = msg.get("content")
+            if not isinstance(content, list):
+                continue
+            for item in reversed(content):
+                inner = item.get("content") if item.get("type") == "tool_result" else None
+                for block in reversed(inner if isinstance(inner, list) else [item]):
+                    if isinstance(block, dict) and block.get("type") == "image":
+                        seen += 1
+                        if seen > keep:
+                            block.pop("source", None)
+                            block["type"] = "text"
+                            block["text"] = "[an image previously shown here was pruned from context]"
+
     def call(self, system, tools, force_tool=None):
         payload = {
             "model": self.model, "max_tokens": 8192, "temperature": 0,
@@ -222,6 +247,22 @@ class OpenAICompat:
             else:
                 out.append({"type": "text", "text": b["text"]})
         return out
+
+    def prune_images(self, keep=10):
+        """Drop all but the newest `keep` images from history so unbounded runs
+        don't overflow the context; the agent has already extracted what it read."""
+        seen = 0
+        for msg in reversed(self.messages):
+            content = msg.get("content")
+            if not isinstance(content, list):
+                continue
+            for item in reversed(content):
+                if item.get("type") == "image_url":
+                    seen += 1
+                    if seen > keep:
+                        item.pop("image_url", None)
+                        item["type"] = "text"
+                        item["text"] = "[an image previously shown here was pruned from context]"
 
     def call(self, system, tools, force_tool=None):
         msgs = [{"role": "system", "content": system}] + self.messages
