@@ -291,8 +291,8 @@ def make_provider(provider, model, base_url="https://api.x.ai/v1"):
 
 
 def add_provider_args(parser):
-    parser.add_argument("--provider", choices=["anthropic", "openai"], default="anthropic")
-    parser.add_argument("--model", default="claude-sonnet-5")
+    parser.add_argument("--provider", choices=["anthropic", "openai"], default="openai")
+    parser.add_argument("--model", default="grok-4.5")
     parser.add_argument("--base-url", default="https://api.x.ai/v1",
                         help="OpenAI-compatible endpoint (xAI: https://api.x.ai/v1)")
 
