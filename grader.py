@@ -52,7 +52,7 @@ def judge(args, prompt):
     model = args.judge_model or args.model
     try:
         return one_shot(args.provider, model, args.base_url, JUDGE_SYSTEM,
-                        [text_block(prompt)], force_json=True,
+                        [{"type": "text", "text": prompt}], force_json=True,
                         schema={"type": "object",
                                 "properties": {"rationale": {"type": "string"},
                                                "pass": {"type": "boolean"}},
@@ -62,12 +62,17 @@ def judge(args, prompt):
 
 
 def grade_run(args, world, task, run_dir):
-    changed = changed_files(world / "filesystem", run_dir / "filesystem")
+    if run_dir == world:
+        # in-place mode: a TUI session wrote deliverables straight into the world dir
+        out_dir = world / "filesystem" / "output"
+        changed = [p.relative_to(world / "filesystem") for p in sorted(out_dir.rglob("*")) if p.is_file()]
+    else:
+        changed = changed_files(world / "filesystem", run_dir / "filesystem")
     evidence = []
     for rel in changed:
         blocks = extract(run_dir / "filesystem" / rel)
         texts = "\n".join(b["text"] for b in blocks if b["type"] == "text")
-        evidence.append(f"----- {rel} -----\n{texts}")
+        evidence.append(f"----- {rel} -----\n{texts[:8000]}")
     evidence_str = "\n\n".join(evidence) or "(the agent changed no files)"
 
     grades = []
@@ -116,19 +121,25 @@ def main():
     ap.add_argument("--run", help="grade one specific run dir")
     ap.add_argument("--judge-model")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--in-place", action="store_true",
+                    help="grade filesystem/output/ inside the world dir itself (TUI sessions)")
     add_provider_args(ap)
     args = ap.parse_args()
 
     world = Path(args.world)
     task = json.loads((world / "task.json").read_text())
-    run_dirs = [Path(args.run)] if args.run else sorted(Path(args.out).glob("run-*"))
+    if args.in_place:
+        run_dirs = [world]
+    else:
+        run_dirs = [Path(args.run)] if args.run else sorted(Path(args.out).glob("run-*"))
     for run_dir in run_dirs:
         if (run_dir / "grades.json").exists() and not args.force:
             print(f"{run_dir}: already graded (use --force)")
             continue
         print(f"{BOLD}=== grading {run_dir} ==={RESET}")
         grade_run(args, world, task, run_dir)
-    print_table(args.out)
+    if not args.in_place:
+        print_table(args.out)
 
 
 if __name__ == "__main__":
