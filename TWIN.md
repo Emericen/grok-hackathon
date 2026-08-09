@@ -13,7 +13,7 @@ exactly (production re-derives amounts under constraints; this is the fast dial)
 Write `dirty/substitution_map.json` (mkdir dirty; add `dirty/` to .gitignore):
 
 ```json
-{"entities": [{"real": "Danny Kowalski", "fake": "...", "kind": "person"}, ...],
+{"entities": [{"real": "<name as it appears>", "fake": "...", "kind": "person"}, ...],
  "filenames": {"<old name>": "<new name>"}}
 ```
 
