@@ -26,21 +26,15 @@ Do the work; correct the agent like you'd correct an associate. That conversatio
 fetch and follow https://raw.githubusercontent.com/Emericen/grok-hackathon/master/TWIN.md
 ```
 
-Grok builds `twin/<case>/` - same story, same traps, every real fact replaced - and must pass the leak scan (`clean`) before handing it over.
+Grok builds `../<newco>-intake/` next to the case, same story and same traps with every identity replaced, plus a `<newco>-task.json` beside it holding the task and verifiers. It must pass the leak scan (`clean`) before handing it over.
 
-**3. Run and grade the twin.** New session in the twin dir, let it work the task one shot, then:
+**3. Run and grade the twin.** New session inside the twin folder, hand it the task from the task file, let it work one shot, then:
 
 ```
 fetch and follow https://raw.githubusercontent.com/Emericen/grok-hackathon/master/GRADE.md
 ```
 
 Grok runs the grader on its own work. The judge is also Grok - but it goes through the script, so it can't improvise the verdict.
-
-Optional: install the skill so `twin this case` triggers without the curl (Grok Build reads Claude-format skills):
-
-```bash
-cp -r grok-hackathon/.claude/skills/redline ~/.agents/skills/
-```
 
 ## Scripts (what the markdowns call)
 
