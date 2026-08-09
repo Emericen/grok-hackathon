@@ -23,7 +23,7 @@ Numbers, dates, and amounts DO NOT change. Same real entity → same fake, every
 
 ## 2. Build the twin
 
-Create the twin as a SIBLING of the case directory, named like a fresh intake: `../<new-company>-intake/` containing `task.json` + `filesystem/`. For every file in the case — EXCEPT `output/`, `dirty/`, and `twin-pipeline/` (the twin's initial state contains only the client's documents, none of your own work):
+Create the twin as a SIBLING of the case directory, named like a fresh intake: `../<new-company>-intake/` — a FLAT client folder, files at the top level exactly like the original intake (no nesting). For every file in the case — EXCEPT `output/`, `dirty/`, and `twin-pipeline/` (the twin contains only the client's documents, none of your own work):
 
 - **No mapped string in it** (most receipts, generic vendor slips): copy unchanged.
 - **Text-like** (txt/md/csv): rewrite with the swaps applied.
@@ -59,7 +59,9 @@ Write a small python script for the bulk work instead of editing file-by-file.
 
 ## 3. task.json
 
-Write `../<new-company>-intake/task.json`: `{"task": "...", "verifiers": [...]}` — the engagement
+Write `../<new-company>-task.json` — NEXT TO the twin folder, never inside it (an agent
+evaluated in the folder must not be able to read its own grading criteria):
+`{"task": "...", "verifiers": [...]}` — the engagement
 task phrased with the fake names, and one verifier per trap the expert's corrections
 caught in this conversation (`{"id", "type": "output|negative", "criteria"}`, criteria
 cite the exact frozen numbers, fake names only).
@@ -68,8 +70,9 @@ cite the exact frozen numbers, fake names only).
 
 ```bash
 python3 twin-pipeline/scripts/scan.py dirty/substitution_map.json ../<new-company>-intake
+python3 twin-pipeline/scripts/scan.py dirty/substitution_map.json ../<new-company>-task.json
 ```
 
-MUST print `clean`. If it reports a leak, fix that file and rescan — never hand over
+Both MUST print `clean`. If either reports a leak, fix that file and rescan — never hand over
 an unscanned twin. Then tell the user: files copied vs re-made, entities swapped,
 scan verdict, and the twin's path (it should sit right next to the original case folder).

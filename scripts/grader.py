@@ -63,14 +63,17 @@ def judge(args, prompt):
 
 def grade_run(args, world, task, run_dir):
     if run_dir == world:
-        # in-place mode: a TUI session wrote deliverables straight into the world dir
-        out_dir = world / "filesystem" / "output"
-        changed = [p.relative_to(world / "filesystem") for p in sorted(out_dir.rglob("*")) if p.is_file()]
+        # in-place mode: a TUI session wrote deliverables straight into the world dir;
+        # flat intake folders have no filesystem/ nesting
+        fs_root = world / "filesystem" if (world / "filesystem").exists() else world
+        out_dir = fs_root / "output"
+        changed = [p.relative_to(fs_root) for p in sorted(out_dir.rglob("*")) if p.is_file()]
     else:
         changed = changed_files(world / "filesystem", run_dir / "filesystem")
     evidence = []
     for rel in changed:
-        blocks = extract(run_dir / "filesystem" / rel)
+        fs_root = run_dir / "filesystem" if (run_dir / "filesystem").exists() else run_dir
+        blocks = extract(fs_root / rel)
         texts = "\n".join(b["text"] for b in blocks if b["type"] == "text")
         evidence.append(f"----- {rel} -----\n{texts[:8000]}")
     evidence_str = "\n\n".join(evidence) or "(the agent changed no files)"
@@ -79,7 +82,8 @@ def grade_run(args, world, task, run_dir):
     for v in task["verifiers"]:
         prompt = f"CRITERION ({v['type']}):\n{v['criteria']}\n\n"
         if v["type"] == "coverage":
-            src = world / "filesystem" / v["enumerate"]
+            world_fs = world / "filesystem" if (world / "filesystem").exists() else world
+            src = world_fs / v["enumerate"]
             listing = sorted(p.name for p in src.iterdir() if p.is_file())
             prompt += ("SOURCE ENUMERATION — the criterion must account for EVERY item below. "
                        "List any item with no corresponding entry in the output; pass only if none are missing.\n"
@@ -122,12 +126,14 @@ def main():
     ap.add_argument("--judge-model")
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--in-place", action="store_true",
-                    help="grade filesystem/output/ inside the world dir itself (TUI sessions)")
+                    help="grade the output/ inside the world dir itself (TUI sessions)")
+    ap.add_argument("--task", help="path to task.json when it lives outside the world dir")
     add_provider_args(ap)
     args = ap.parse_args()
 
     world = Path(args.world)
-    task = json.loads((world / "task.json").read_text())
+    task_path = Path(args.task) if args.task else world / "task.json"
+    task = json.loads(task_path.read_text())
     if args.in_place:
         run_dirs = [world]
     else:

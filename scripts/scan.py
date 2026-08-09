@@ -24,7 +24,8 @@ def main():
     reals = [e["real"] for e in sub_map["entities"]
              if len(e["real"]) >= 4 and e["real"] != e.get("fake")]
     hits = []
-    for p in twin.rglob("*"):
+    targets = [twin] if twin.is_file() else twin.rglob("*")
+    for p in targets:
         if not p.is_file():
             continue
         content = p.read_bytes().decode("utf-8", errors="ignore")
