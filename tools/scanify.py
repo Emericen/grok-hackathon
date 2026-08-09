@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# REFERENCE IMPLEMENTATION — reuse the degradation profiles (flatbed/photocopy/phone),
+# REFERENCE IMPLEMENTATION - reuse the degradation profiles (flatbed/photocopy/phone),
 # not the hardcoded paths/PROFILE table, which belong to the project this came from.
 # Degrades the clean PDFs into shoebox realism. Three conditions:
-#   flatbed   — slight rotation, paper tone, sensor noise, mid JPEG quality
-#   photocopy — grayscale gen-2 copy: blur, harsh contrast, edge band, heavy noise
-#   phone     — photographed on a desk: perspective, rotation, warm cast, vignette
+#   flatbed   - slight rotation, paper tone, sensor noise, mid JPEG quality
+#   photocopy - grayscale gen-2 copy: blur, harsh contrast, edge band, heavy noise
+#   phone     - photographed on a desk: perspective, rotation, warm cast, vignette
 # Output filenames mimic how a real client names files (IMG_xxxx, "bank stmt jan").
 import os, random, subprocess, glob
 from PIL import Image, ImageEnhance, ImageFilter, ImageDraw, ImageOps

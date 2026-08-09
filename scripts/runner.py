@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""runner.py — an agent works a case. Used on BOTH sides of the pipeline:
+"""runner.py - an agent works a case. Used on BOTH sides of the pipeline:
 on a real case to generate the trace, on a twin world to evaluate it, and
 (via pipeline.py, as a library) to fabricate twin artifacts.
 
 USAGE
-    # real case (dirty room — stays on this machine)
+    # real case (dirty room - stays on this machine)
     python runner.py path/to/real-case --task "prepare the filing review" --out dirty/case-run
 
     # twin world (task read from its task.json), N times for a reproduction rate
@@ -15,7 +15,7 @@ USAGE
 
 Each run copies the case into a fresh run-NN/filesystem/ (the original is never
 touched), gives the agent bash / read_file / write_file / done with paths locked
-inside the run dir, and leaves transcript.jsonl — which is the trace format that
+inside the run dir, and leaves transcript.jsonl - which is the trace format that
 pipeline.py ingests.
 """
 
@@ -34,7 +34,7 @@ filesystem. Your working directory is the case root; all paths are relative to i
 
 Tools:
 - bash: run a shell command (ls, grep, mkdir, etc.). Do NOT use it to read documents.
-- read_file: read any document — text, images, scanned PDFs, docx, xlsx. Always use this to \
+- read_file: read any document - text, images, scanned PDFs, docx, xlsx. Always use this to \
 read case files; scanned documents are rendered so you can see them.
 - write_file: write a deliverable file.
 - done: call when every deliverable is written.
@@ -123,7 +123,7 @@ def run_agent(
 ):
     """One agent run. Copies src_fs into run_dir/filesystem, loops until done/cap.
 
-    extra_mount: optional (name, path) — a second directory copied into the run dir
+    extra_mount: optional (name, path) - a second directory copied into the run dir
     alongside filesystem/ (pipeline.py uses this to expose the real case read-side).
     Returns the run_dir.
     """
@@ -206,7 +206,7 @@ def main():
         src_fs = case / "filesystem"
     else:
         if not args.task:
-            ap.error(f"{case} has no task.json — pass --task")
+            ap.error(f"{case} has no task.json - pass --task")
         task_text = args.task
         src_fs = case
 

@@ -1,4 +1,4 @@
-"""lib.py — shared extractors and model providers for runner.py / grader.py.
+"""lib.py - shared extractors and model providers for runner.py / grader.py.
 
 Stdlib only. Needs `pdftotext`/`pdftoppm` (poppler) on PATH for PDF worlds.
 """
@@ -307,7 +307,7 @@ def one_shot(provider, model, base_url, system, prompt_blocks, force_json=False,
         text, _ = p.call(system, [])
         return text
     emit = {"name": "emit_json",
-            "description": "Emit the complete final result. Every field filled — never empty.",
+            "description": "Emit the complete final result. Every field filled - never empty.",
             "parameters": schema or {"type": "object", "additionalProperties": True}}
     system = system + "\n\nCall emit_json exactly once with the COMPLETE result as its argument."
     text, calls = p.call(system, [emit], force_tool="emit_json")

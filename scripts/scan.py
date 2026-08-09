@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""scan.py — the packaging gate. Exits nonzero if any real entity survives in a twin.
+"""scan.py - the packaging gate. Exits nonzero if any real entity survives in a twin.
 
 USAGE
     python scan.py dirty/substitution_map.json worlds/my-twin
 
 Scans every file's text content AND every filename under the twin dir (task.json and
 manifest.json included) for every "real" string in the substitution map (length >= 4,
-and only where fake differs from real). Any hit: prints it and exits 1 — nothing with
+and only where fake differs from real). Any hit: prints it and exits 1 - nothing with
 a hit may ship. This gate is code on purpose: an instruction a model might skip is not
 a privacy guarantee.
 """
@@ -35,8 +35,8 @@ def main():
     if hits:
         for path, real in hits:
             print(f"LEAK: '{real}' in {path}")
-        sys.exit(f"FAILED — {len(hits)} real entities survived; do not ship this twin")
-    print(f"clean — {len(reals)} entities scanned, zero survivors in {twin}")
+        sys.exit(f"FAILED - {len(hits)} real entities survived; do not ship this twin")
+    print(f"clean - {len(reals)} entities scanned, zero survivors in {twin}")
 
 
 if __name__ == "__main__":

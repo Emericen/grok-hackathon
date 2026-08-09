@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-r"""pipeline.py — the factory: trace in, twin world out.
+r"""pipeline.py - the factory: trace in, twin world out.
 
 USAGE
     python pipeline.py dirty/case-run/transcript.jsonl \
@@ -18,7 +18,7 @@ STAGES
                    images with PIL. (--fab-model picks the fabricator model.)
     4. VERIFY-GEN  one LLM call: trace digest + correction + twin listing -> task.json
                    (task prompt + verifiers, incl. coverage/negative types).
-    5. PACKAGE     substitution scan — packaging FAILS if any real entity survives —
+    5. PACKAGE     substitution scan - packaging FAILS if any real entity survives -
                    then write worlds/<id>/{filesystem/, task.json, manifest.json}.
 
 Model knobs: --fab-* for the fabricator agent, top-level --provider/--model for the
@@ -116,7 +116,7 @@ def one_shot_valid(validate, *args, **kwargs):
         if validate(result):
             return result
         print(f"    malformed structure (attempt {attempt + 1}/3), retrying", file=sys.stderr)
-    sys.exit("structured call kept returning malformed output — aborting")
+    sys.exit("structured call kept returning malformed output - aborting")
 
 
 # ------------------------------------------------------------------ stage 2
@@ -129,7 +129,7 @@ and invent a consistent fabricated replacement for each.
 
 Map the CASE, exhaustively: every named party, every identifier, every project name/code, and \
 every distinctive amount appearing in the case-file text or the correction gets an entry. The \
-operator's own machine details in the trace (usernames, local paths) are not case entities — \
+operator's own machine details in the trace (usernames, local paths) are not case entities - \
 ignore them; they never ship.
 
 Preserve every constraint the case's traps depend on: replacement IDs keep format and length, \
@@ -163,18 +163,18 @@ MAP_SCHEMA = {
 # ------------------------------------------------------------------ stage 3
 
 FAB_TASK = """You are fabricating an anonymized TWIN of a real case. The real files are in \
-real_case/ (read-only reference). Write the twin into filesystem/ — one twin file for every \
+real_case/ (read-only reference). Write the twin into filesystem/ - one twin file for every \
 real file, same disorder, same traps, every real-world fact replaced per the substitution map \
 below.
 
 Rules:
-- Apply the substitution map EXACTLY and CONSISTENTLY — the same real entity always becomes \
+- Apply the substitution map EXACTLY and CONSISTENTLY - the same real entity always becomes \
 the same fake entity, across every file. Use the mapped filenames.
 - Preserve structure: if the real file is a messy scan of a two-page form, the twin says so; \
 if amounts reconcile across files, the twin's amounts reconcile identically (the map's \
 constraints tell you the arithmetic).
 - Text-like files (txt, md, csv, docx, xlsx content): write the twin content directly as a \
-text file with the same meaning and layout. For docx/xlsx, write a .md or .csv twin — \
+text file with the same meaning and layout. For docx/xlsx, write a .md or .csv twin - \
 format fidelity matters less than content fidelity.
 - Image or scanned files (jpg, png, image-based pdf): do NOT write an image. Write \
 `<twin name>.render.json` instead: {"filename": "<twin name>.png", "doc_type": "...", \
@@ -183,7 +183,7 @@ format fidelity matters less than content fidelity.
 in fields, substituted.
 - Read every real file before writing its twin. Do not invent facts with no real counterpart.
 - Before calling done, SELF-SCAN: grep filesystem/ (contents AND filenames) for every "real" \
-string in the map. Any hit means you missed a substitution — fix it. Packaging will hard-fail \
+string in the map. Any hit means you missed a substitution - fix it. Packaging will hard-fail \
 on any surviving real entity, so do not call done while a hit remains.
 
 SUBSTITUTION MAP:
@@ -236,13 +236,13 @@ will be given and the verifiers that decide pass/fail.
 
 The task must mirror the original ask, phrased for the twin's fabricated facts, with concrete \
 deliverable files under filesystem/output/. Each verifier is ONE plain-English criterion \
-judged against the final files. Derive them from the expert's correction — each one a trap \
+judged against the final files. Derive them from the expert's correction - each one a trap \
 the expert caught. Include:
 - output criteria for each thing the correction says must be present,
 - exactly one negative criterion ("did NOT ...") for fabrication/concealment,
 - a coverage criterion ("every file in <dir> is accounted for") ONLY if the correction \
 implies completeness, with "enumerate" set to that dir relative to filesystem/.
-CRITICAL: criteria must reference ONLY the twin's fabricated names, amounts, and dates — read
+CRITICAL: criteria must reference ONLY the twin's fabricated names, amounts, and dates - read
 them from the twin file contents provided. The trace and correction contain the REAL values;
 translate every one through the substitution map. A criterion naming a real entity is a
 privacy leak and will fail packaging.
@@ -305,7 +305,7 @@ def main():
 
     out = Path(args.out)
     if out.exists():
-        sys.exit(f"{out} already exists — refusing to overwrite a world")
+        sys.exit(f"{out} already exists - refusing to overwrite a world")
     dirty = Path("dirty")
     dirty.mkdir(exist_ok=True)
 
@@ -322,7 +322,7 @@ def main():
         case_texts.append(f"----- {rel} -----\n{text[:2500]}")
     prompt = (f"TRACE:\n{digest}\n\nFILE TREE ({manifest['files']} files):\n"
               + "\n".join(manifest["tree"])
-              + "\n\nCASE FILE TEXT (extracted, partial — scanned files yield little):\n\n"
+              + "\n\nCASE FILE TEXT (extracted, partial - scanned files yield little):\n\n"
               + "\n\n".join(case_texts)
               + f"\n\nEXPERT CORRECTION:\n{correction}")
     sub_map = one_shot_valid(valid_map, args.provider, args.model, args.base_url,
@@ -348,8 +348,8 @@ def main():
         blocks = extract(fab_fs / rel)
         text = "\n".join(b["text"] for b in blocks if b["type"] == "text")
         twin_contents.append(f"----- {rel} -----\n{text[:3000]}")
-    prompt = (f"TRACE (real values — do NOT reuse them):\n{digest}\n\n"
-              f"EXPERT CORRECTION (real values — do NOT reuse them):\n{correction}\n\n"
+    prompt = (f"TRACE (real values - do NOT reuse them):\n{digest}\n\n"
+              f"EXPERT CORRECTION (real values - do NOT reuse them):\n{correction}\n\n"
               f"SUBSTITUTION MAP:\n{json.dumps(sub_map, ensure_ascii=False)}\n\n"
               f"TWIN FILE CONTENTS (use THESE names/amounts/dates in criteria):\n\n"
               + "\n\n".join(twin_contents))
@@ -365,7 +365,7 @@ def main():
     if hits:
         for path, real in hits[:20]:
             print(f"  LEAK: '{real}' in {path}", file=sys.stderr)
-        sys.exit("packaging FAILED — real entities survived; twin left in dirty/, nothing shipped")
+        sys.exit("packaging FAILED - real entities survived; twin left in dirty/, nothing shipped")
     out.mkdir(parents=True)
     shutil.copytree(fab_dir / "filesystem", out / "filesystem")
     (out / "task.json").write_text(json.dumps(task_json, indent=2, ensure_ascii=False))

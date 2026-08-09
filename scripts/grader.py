@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""grader.py — diff, judge, table. Reward comes from final disk state,
+"""grader.py - diff, judge, table. Reward comes from final disk state,
 never from what the agent says it did.
 
 USAGE
@@ -12,7 +12,7 @@ Per run: diff the run's filesystem against the pristine world (new or changed
 files are the evidence), extract their text, one LLM call per verifier ->
 {rationale, pass}, write grades.json. Then the pass/fail matrix and the headline
 reproduction rate. Coverage verifiers get the source enumeration injected in
-code — never ask an LLM to count.
+code - never ask an LLM to count.
 """
 
 import argparse
@@ -85,7 +85,7 @@ def grade_run(args, world, task, run_dir):
             world_fs = world / "filesystem" if (world / "filesystem").exists() else world
             src = world_fs / v["enumerate"]
             listing = sorted(p.name for p in src.iterdir() if p.is_file())
-            prompt += ("SOURCE ENUMERATION — the criterion must account for EVERY item below. "
+            prompt += ("SOURCE ENUMERATION - the criterion must account for EVERY item below. "
                        "List any item with no corresponding entry in the output; pass only if none are missing.\n"
                        + "\n".join(f"- {n}" for n in listing) + "\n\n")
         prompt += f"AGENT'S CHANGED FILES:\n\n{evidence_str}"

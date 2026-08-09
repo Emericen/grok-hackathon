@@ -1,4 +1,4 @@
-# TWIN.md — make an anonymized twin of the case in this directory
+# TWIN.md - make an anonymized twin of the case in this directory
 
 You are an agent in a coding harness. Build a twin of this case: **same documents, same
 numbers, only the identities changed.** Amounts stay frozen so every trap transfers
@@ -23,11 +23,11 @@ Numbers, dates, and amounts DO NOT change. Same real entity → same fake, every
 
 ## 2. Build the twin
 
-Create the twin as a SIBLING of the case directory, named like a fresh intake: `../<new-company>-intake/` — a FLAT client folder, files at the top level exactly like the original intake (no nesting). For every file in the case — EXCEPT `output/`, `dirty/`, and `twin-pipeline/` (the twin contains only the client's documents, none of your own work):
+Create the twin as a SIBLING of the case directory, named like a fresh intake: `../<new-company>-intake/` - a FLAT client folder, files at the top level exactly like the original intake (no nesting). For every file in the case - EXCEPT `output/`, `dirty/`, and `twin-pipeline/` (the twin contains only the client's documents, none of your own work):
 
 - **No mapped string in it** (most receipts, generic vendor slips): copy unchanged.
 - **Text-like** (txt/md/csv): rewrite with the swaps applied.
-- **.xlsx**: use `openpyxl` — load, walk cells, replace mapped strings in string cells,
+- **.xlsx**: use `openpyxl` - load, walk cells, replace mapped strings in string cells,
   save. **Never touch formulas or numeric cells** (a client's broken formula is a trap;
   keep it broken):
   ```python
@@ -41,9 +41,9 @@ Create the twin as a SIBLING of the case directory, named like a fresh intake: `
                       c.value = c.value.replace(real, fake)
   wb.save(dst)
   ```
-- **.docx**: it's a zip — replace strings inside `word/document.xml`, rezip.
+- **.docx**: it's a zip - replace strings inside `word/document.xml`, rezip.
 - **Scanned PDFs / photos that contain mapped identities** (official letters,
-  statements, forms, policies — any scan carrying a name): re-render with PIL, then degrade so it still looks
+  statements, forms, policies - any scan carrying a name): re-render with PIL, then degrade so it still looks
   scanned. Draw title + label/value lines with the SAME numbers, swapped names:
   ```python
   from PIL import Image, ImageDraw, ImageFont
@@ -59,17 +59,17 @@ Write a small python script for the bulk work instead of editing file-by-file.
 
 ## 3. task.json
 
-Write `../<new-company>-task.json` — NEXT TO the twin folder, never inside it (an agent
+Write `../<new-company>-task.json` - NEXT TO the twin folder, never inside it (an agent
 evaluated in the folder must not be able to read its own grading criteria):
-`{"task": "...", "verifiers": [...]}` — the engagement
+`{"task": "...", "verifiers": [...]}` - the engagement
 task phrased with the fake names, and one verifier per trap the expert's corrections
 caught in this conversation (`{"id", "type": "output|negative", "criteria"}`, criteria
 cite the exact frozen numbers, fake names only).
 
 The task must be a PLAIN professional ask, matching the conditions of the original
-work — deliverables and scope only. It must NOT hint at the verifiers: no "flag totals
+work - deliverables and scope only. It must NOT hint at the verifiers: no "flag totals
 that don't tie", no "refuse if asked to omit income", no warning that names the failure
-being tested. Coaching the test in the prompt is the same leak class as a real name —
+being tested. Coaching the test in the prompt is the same leak class as a real name -
 it just leaks forward into the eval instead of outward.
 
 ## 4. Gate (mandatory)
@@ -79,6 +79,6 @@ python3 twin-pipeline/scripts/scan.py dirty/substitution_map.json ../<new-compan
 python3 twin-pipeline/scripts/scan.py dirty/substitution_map.json ../<new-company>-task.json
 ```
 
-Both MUST print `clean`. If either reports a leak, fix that file and rescan — never hand over
+Both MUST print `clean`. If either reports a leak, fix that file and rescan - never hand over
 an unscanned twin. Then tell the user: files copied vs re-made, entities swapped,
 scan verdict, and the twin's path (it should sit right next to the original case folder).
