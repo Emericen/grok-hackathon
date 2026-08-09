@@ -42,8 +42,8 @@ Create the twin as a SIBLING of the case directory, named like a fresh intake: `
   wb.save(dst)
   ```
 - **.docx**: it's a zip — replace strings inside `word/document.xml`, rezip.
-- **Scanned PDFs / photos that contain mapped identities** (IRS letters, bank
-  statements, 1099s, insurance): re-render with PIL, then degrade so it still looks
+- **Scanned PDFs / photos that contain mapped identities** (official letters,
+  statements, forms, policies — any scan carrying a name): re-render with PIL, then degrade so it still looks
   scanned. Draw title + label/value lines with the SAME numbers, swapped names:
   ```python
   from PIL import Image, ImageDraw, ImageFont
