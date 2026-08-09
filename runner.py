@@ -27,6 +27,8 @@ from pathlib import Path
 
 from lib import add_provider_args, extract, make_provider, text_block
 
+BOLD, DIM, CYAN, GREEN, RESET = "\033[1m", "\033[2m", "\033[36m", "\033[32m", "\033[0m"
+
 SYSTEM_PROMPT = """You are an autonomous agent working a professional case inside a sandboxed \
 filesystem. Your working directory is the case root; all paths are relative to it.
 
@@ -105,17 +107,19 @@ def run_agent(src_fs, task_text, run_dir, provider, model, base_url, max_steps=5
         transcript.flush()
 
     log(role="user", text=task_text)
+    task_preview = " ".join(task_text.split())[:260]
+    print(f"{BOLD}task ▸ {task_preview}…{RESET}")
     for step in range(max_steps):
         text, calls = agent.call(system_prompt, TOOLS)
         log(role="assistant", text=text, calls=[{"name": c["name"], "args": c["args"]} for c in calls])
         if text.strip():
-            print(f"  [{step}] {text.strip()[:110]}")
+            print(f"  {DIM}[{step}]{RESET} {CYAN}{text.strip()[:160]}{RESET}")
         if not calls or any(c["name"] == "done" for c in calls):
-            print(f"  done after {step + 1} steps")
+            print(f"  {GREEN}{BOLD}done after {step + 1} steps{RESET}")
             break
         results = []
         for c in calls:
-            print(f"  [{step}] {c['name']}: {json.dumps(c['args'], ensure_ascii=False)[:90]}")
+            print(f"  {DIM}[{step}] {c['name']}: {json.dumps(c['args'], ensure_ascii=False)[:90]}{RESET}")
             try:
                 blocks = exec_tool(run_dir, c["name"], c["args"])
             except Exception as e:
@@ -156,7 +160,7 @@ def main():
     start = max(existing, default=0) + 1
     for n in range(start, start + args.runs):
         run_dir = out_root / f"run-{n:02d}"
-        print(f"=== {run_dir} ({args.provider}:{args.model}) ===")
+        print(f"{BOLD}=== {run_dir} ({args.provider}:{args.model}) ==={RESET}")
         run_agent(src_fs, task_text, run_dir, args.provider, args.model, args.base_url, args.max_steps)
 
 

@@ -138,6 +138,11 @@ def http_json(url, headers, payload, retries=4):
                 time.sleep(wait)
                 continue
             raise RuntimeError(f"HTTP {e.code}: {detail}")
+        except (TimeoutError, urllib.error.URLError, ConnectionError) as e:
+            if attempt < retries - 1:
+                print(f"    [net: {type(e).__name__}] retrying", file=sys.stderr)
+                continue
+            raise
     raise RuntimeError("unreachable")
 
 
@@ -167,7 +172,8 @@ class Anthropic:
 
     def call(self, system, tools, force_tool=None):
         payload = {
-            "model": self.model, "max_tokens": 8192, "system": system, "messages": self.messages,
+            "model": self.model, "max_tokens": 8192, "temperature": 0,
+            "system": system, "messages": self.messages,
             "tools": [{"name": t["name"], "description": t["description"], "input_schema": t["parameters"]} for t in tools],
         }
         if force_tool:
@@ -220,7 +226,7 @@ class OpenAICompat:
     def call(self, system, tools, force_tool=None):
         msgs = [{"role": "system", "content": system}] + self.messages
         payload = {
-            "model": self.model, "messages": msgs, "max_tokens": 8192,
+            "model": self.model, "messages": msgs, "max_tokens": 8192, "temperature": 0,
             "tools": [{"type": "function", "function": t} for t in tools],
         }
         if force_tool:

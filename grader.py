@@ -22,6 +22,8 @@ from pathlib import Path
 
 from lib import add_provider_args, extract, one_shot, text_block
 
+BOLD, DIM, GREEN, RED, RESET = "\033[1m", "\033[2m", "\033[32m", "\033[31m", "\033[0m"
+
 JUDGE_SYSTEM = """You are a strict grader. Judge whether ONE criterion is satisfied by the \
 agent's output files, using only the evidence shown. Rules:
 - If the criterion asks for a specific answer and the task did not request multiple scenarios, \
@@ -80,8 +82,10 @@ def grade_run(args, world, task, run_dir):
         prompt += f"AGENT'S CHANGED FILES:\n\n{evidence_str}"
         verdict = judge(args, prompt)
         grades.append({"id": v["id"], "type": v["type"], **verdict})
-        mark = "PASS" if verdict["pass"] else "FAIL"
-        print(f"  [{mark}] {v['id']}: {verdict['rationale'][:100]}")
+        if verdict["pass"]:
+            print(f"  {GREEN}[PASS]{RESET} {BOLD}{v['id']}{RESET} {DIM}{verdict['rationale'][:100]}{RESET}")
+        else:
+            print(f"  {RED}{BOLD}[FAIL] {v['id']}{RESET} {verdict['rationale'][:100]}")
     (run_dir / "grades.json").write_text(json.dumps(grades, indent=2, ensure_ascii=False))
 
 
@@ -99,10 +103,10 @@ def print_table(out_root):
     print(f"\n{'verifier':<{width}}  {'pass':>4}  {'fail':>4}   per-run")
     print("-" * (width + 30))
     for vid, results in table.items():
-        marks = "".join("✓" if r else "✗" for r in results)
+        marks = "".join(f"{GREEN}✓{RESET}" if r else f"{RED}✗{RESET}" for r in results)
         print(f"{vid:<{width}}  {sum(results):>4}  {n - sum(results):>4}   {marks}")
     failed = sum(1 for gf in graded if not all(g["pass"] for g in json.loads(gf.read_text())))
-    print(f"\nruns with at least one failure: {failed}/{n}  (reproduction rate {failed / n:.0%})")
+    print(f"\n{BOLD}runs with at least one failure: {failed}/{n}  (reproduction rate {failed / n:.0%}){RESET}")
 
 
 def main():
@@ -122,7 +126,7 @@ def main():
         if (run_dir / "grades.json").exists() and not args.force:
             print(f"{run_dir}: already graded (use --force)")
             continue
-        print(f"=== grading {run_dir} ===")
+        print(f"{BOLD}=== grading {run_dir} ==={RESET}")
         grade_run(args, world, task, run_dir)
     print_table(args.out)
 
