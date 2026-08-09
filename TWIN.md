@@ -23,7 +23,7 @@ Numbers, dates, and amounts DO NOT change. Same real entity → same fake, every
 
 ## 2. Build the twin
 
-Create `twin/<new-company-slug>/filesystem/`. For every file in the case:
+Create `twin/<new-company-slug>/filesystem/`. For every file in the case — EXCEPT `output/`, `dirty/`, `twin/`, and `twin-pipeline/` (the twin's initial state contains only the client's documents, none of your own work):
 
 - **No mapped string in it** (most receipts, generic vendor slips): copy unchanged.
 - **Text-like** (txt/md/csv): rewrite with the swaps applied.
